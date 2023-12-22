@@ -24,12 +24,6 @@ type Repo = record {
   developer_id : text;
   developer : principal;
 };
-type RepoPayload = record {
-  repo_name : text;
-  description : text;
-  programming_language_id : text;
-  developer_id : text;
-};
 type _AzleResult = variant { Ok : Developer; Err : text };
 type _AzleResult_1 = variant { Ok : ProgrammingLanguage; Err : text };
 type _AzleResult_2 = variant { Ok : Repo; Err : text };
@@ -40,7 +34,7 @@ type _AzleResult_6 = variant { Ok : vec Repo; Err : text };
 service : () -> {
   createDeveloper : (DeveloperPayload) -> (_AzleResult);
   createLanguage : (ProgrammingLanguagePayload) -> (_AzleResult_1);
-  createRepo : (RepoPayload) -> (_AzleResult_2);
+  createRepo : (text, text, text, text) -> (_AzleResult_2);
   deleteRepo : (text) -> (_AzleResult_3);
   getDeveloperById : (text) -> (_AzleResult) query;
   getDeveloperByUsername : (text) -> (_AzleResult) query;
@@ -54,5 +48,5 @@ service : () -> {
   getReposByDev : (text) -> (_AzleResult_6) query;
   getReposByLanguage : (text) -> (_AzleResult_6) query;
   updateDeveloper : (text, DeveloperPayload) -> (_AzleResult);
-  updateRepo : (text, RepoPayload) -> (_AzleResult_2);
+  updateRepo : (text, text, text, text, text) -> (_AzleResult_2);
 }
