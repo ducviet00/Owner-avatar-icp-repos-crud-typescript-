@@ -1,0 +1,58 @@
+type Developer = record {
+  id : text;
+  "principal" : principal;
+  username : text;
+  createdAt : nat64;
+  email : text;
+  updatedAt : opt nat64;
+};
+type DeveloperPayload = record { username : text; email : text };
+type ProgrammingLanguage = record {
+  id : text;
+  name : text;
+  createdAt : nat64;
+  updatedAt : opt nat64;
+};
+type ProgrammingLanguagePayload = record { name : text };
+type Repo = record {
+  id : text;
+  repo_name : text;
+  createdAt : nat64;
+  description : text;
+  programming_language_id : text;
+  updatedAt : opt nat64;
+  developer_id : text;
+  developer : principal;
+};
+type RepoPayload = record {
+  repo_name : text;
+  description : text;
+  programming_language_id : text;
+  developer_id : text;
+};
+type _AzleResult = variant { Ok : Developer; Err : text };
+type _AzleResult_1 = variant { Ok : ProgrammingLanguage; Err : text };
+type _AzleResult_2 = variant { Ok : Repo; Err : text };
+type _AzleResult_3 = variant { Ok : text; Err : text };
+type _AzleResult_4 = variant { Ok : vec Developer; Err : text };
+type _AzleResult_5 = variant { Ok : vec ProgrammingLanguage; Err : text };
+type _AzleResult_6 = variant { Ok : vec Repo; Err : text };
+service : () -> {
+  createDeveloper : (DeveloperPayload) -> (_AzleResult);
+  createLanguage : (ProgrammingLanguagePayload) -> (_AzleResult_1);
+  createRepo : (RepoPayload) -> (_AzleResult_2);
+  deleteRepo : (text) -> (_AzleResult_3);
+  getDeveloperById : (text) -> (_AzleResult) query;
+  getDeveloperByUsername : (text) -> (_AzleResult) query;
+  getDevelopers : () -> (_AzleResult_4) query;
+  getLanguageById : (text) -> (_AzleResult_1) query;
+  getLanguageByName : (text) -> (_AzleResult_1) query;
+  getLanguages : () -> (_AzleResult_5) query;
+  getMyRepos : () -> (_AzleResult_6) query;
+  getRepoById : (text) -> (_AzleResult_2) query;
+  getRepos : () -> (_AzleResult_6) query;
+  getReposByDev : (text) -> (_AzleResult_6) query;
+  getReposByLanguage : (text) -> (_AzleResult_6) query;
+  updateDeveloper : (text, DeveloperPayload) -> (_AzleResult);
+  updateRepo : (text, RepoPayload) -> (_AzleResult_2);
+}
