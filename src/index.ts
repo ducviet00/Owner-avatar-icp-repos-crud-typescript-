@@ -1,4 +1,16 @@
-import { $query, $update, Record, StableBTreeMap, Vec, match, Result, nat64, ic, Opt, Principal } from 'azle';
+import {
+    $query,
+    $update,
+    Record,
+    StableBTreeMap,
+    Vec,
+    match,
+    Result,
+    nat64,
+    ic,
+    Opt,
+    Principal,
+} from 'azle';
 import { v4 as uuidv4 } from 'uuid';
 
 // Define Developer type
@@ -9,7 +21,7 @@ type Developer = Record<{
     email: string;
     createdAt: nat64;
     updatedAt: Opt<nat64>;
-}>
+}>;
 
 // Define ProgrammingLanguage type
 type ProgrammingLanguage = Record<{
@@ -17,7 +29,7 @@ type ProgrammingLanguage = Record<{
     name: string;
     createdAt: nat64;
     updatedAt: Opt<nat64>;
-}>
+}>;
 
 // Define Repo type
 type Repo = Record<{
@@ -29,18 +41,18 @@ type Repo = Record<{
     description: string;
     createdAt: nat64;
     updatedAt: Opt<nat64>;
-}>
+}>;
 
 // Define DeveloperPayload for creating/updating developerStorage
 type DeveloperPayload = Record<{
     username: string;
     email: string;
-}>
+}>;
 
 // Define ProgrammingLanguagePayload for creating/updating languageStorage
 type ProgrammingLanguagePayload = Record<{
     name: string;
-}>
+}>;
 
 // Define RepoPayload for creating/updating repoStorage
 type RepoPayload = Record<{
@@ -48,7 +60,7 @@ type RepoPayload = Record<{
     programming_language_id: string;
     repo_name: string;
     description: string;
-}>
+}>;
 
 // Create a new StableBTreeMap to store tokens, blockchains
 const developerStorage = new StableBTreeMap<string, Developer>(0, 44, 1024);
@@ -58,260 +70,420 @@ const repoStorage = new StableBTreeMap<string, Repo>(2, 44, 1024);
 $query;
 // Find all developers info
 export function getDevelopers(): Result<Vec<Developer>, string> {
-    return Result.Ok(developerStorage.values());
+    try {
+        // Return all developers
+        return Result.Ok(developerStorage.values());
+    } catch (error) {
+        return Result.Err(`Error retrieving developers: ${error}`);
+    }
 }
 
 $query;
 // Find all programming languages info
 export function getLanguages(): Result<Vec<ProgrammingLanguage>, string> {
-    return Result.Ok(languageStorage.values());
+    try {
+        // Return all programming languages
+        return Result.Ok(languageStorage.values());
+    } catch (error) {
+        return Result.Err(`Error retrieving programming languages: ${error}`);
+    }
 }
 
 $query;
 // Find all repos info
 export function getRepos(): Result<Vec<Repo>, string> {
-    return Result.Ok(repoStorage.values());
+    try {
+        // Return all repos
+        return Result.Ok(repoStorage.values());
+    } catch (error) {
+        return Result.Err(`Error retrieving repos: ${error}`);
+    }
 }
 
 $query;
 // Find developer by id
 export function getDeveloperById(id: string): Result<Developer, string> {
-    return match(developerStorage.get(id), {
-        Some: (dev) => Result.Ok<Developer, string>(dev),
-        None: () => Result.Err<Developer, string>(`developer with id=${id} not found`)
-    });
+    // Parameter Validation: Ensure that ID is provided
+    if (!id) {
+        return Result.Err<Developer, string>('Invalid ID provided.');
+    }
+
+    try {
+        // Return developer by ID
+        return match(developerStorage.get(id), {
+            Some: (dev) => Result.Ok<Developer, string>(dev),
+            None: () => Result.Err<Developer, string>(`Developer with id=${id} not found`),
+        });
+    } catch (error) {
+        return Result.Err(`Error retrieving developer: ${error}`);
+    }
 }
 
 $query;
 // Find developer by github's username
 export function getDeveloperByUsername(username: string): Result<Developer, string> {
-    const developers = developerStorage.values();
-    for (const dev of developers) {
-        if (dev.username == username) {
-            return Result.Ok<Developer, string>(dev);
-        }
+    // Parameter Validation: Ensure that username is provided
+    if (!username) {
+        return Result.Err<Developer, string>('Invalid username provided.');
     }
-    return Result.Err<Developer, string>(`Developer with username = ${name} not found`);
+
+    try {
+        // Return developer by username
+        const developers = developerStorage.values();
+        for (const dev of developers) {
+            if (dev.username === username) {
+                return Result.Ok<Developer, string>(dev);
+            }
+        }
+        return Result.Err<Developer, string>(`Developer with username = ${username} not found`);
+    } catch (error) {
+        return Result.Err(`Error retrieving developer: ${error}`);
+    }
 }
 
 $query;
 // Find programming language info by id
 export function getLanguageById(id: string): Result<ProgrammingLanguage, string> {
-    return match(languageStorage.get(id), {
-        Some: (language) => Result.Ok<ProgrammingLanguage, string>(language),
-        None: () => Result.Err<ProgrammingLanguage, string>(`ProgrammingLanguage with id=${id} not found`)
-    });
+    // Parameter Validation: Ensure that ID is provided
+    if (!id) {
+        return Result.Err<ProgrammingLanguage, string>('Invalid ID provided.');
+    }
+
+    try {
+        // Return programming language by ID
+        return match(languageStorage.get(id), {
+            Some: (language) => Result.Ok<ProgrammingLanguage, string>(language),
+            None: () => Result.Err<ProgrammingLanguage, string>(`ProgrammingLanguage with id=${id} not found`),
+        });
+    } catch (error) {
+        return Result.Err(`Error retrieving programming language: ${error}`);
+    }
 }
 
 $query;
 // Find programming language info by language's name
 export function getLanguageByName(name: string): Result<ProgrammingLanguage, string> {
-    const languages = languageStorage.values();
-    for (const language of languages) {
-        if (language.name == name) {
-            return Result.Ok<ProgrammingLanguage, string>(language);
-        }
+    // Parameter Validation: Ensure that name is provided
+    if (!name) {
+        return Result.Err<ProgrammingLanguage, string>('Invalid name provided.');
     }
-    return Result.Err<ProgrammingLanguage, string>(`ProgrammingLanguage with name = ${name} not found`);
+
+    try {
+        // Return programming language by name
+        const languages = languageStorage.values();
+        for (const language of languages) {
+            if (language.name === name) {
+                return Result.Ok<ProgrammingLanguage, string>(language);
+            }
+        }
+        return Result.Err<ProgrammingLanguage, string>(`ProgrammingLanguage with name = ${name} not found`);
+    } catch (error) {
+        return Result.Err(`Error retrieving programming language: ${error}`);
+    }
 }
 
 $query;
 // Find repo info by id
 export function getRepoById(id: string): Result<Repo, string> {
-    return match(repoStorage.get(id), {
-        Some: (repo) => Result.Ok<Repo, string>(repo),
-        None: () => Result.Err<Repo, string>(`Repo with id=${id} not found`)
-    });
+    // Parameter Validation: Ensure that ID is provided
+    if (!id) {
+        return Result.Err<Repo, string>('Invalid ID provided.');
+    }
+
+    try {
+        // Return repo by ID
+        return match(repoStorage.get(id), {
+            Some: (repo) => Result.Ok<Repo, string>(repo),
+            None: () => Result.Err<Repo, string>(`Repo with id=${id} not found`),
+        });
+    } catch (error) {
+        return Result.Err<Repo, string>(`Error retrieving repo: ${error}`);
+    }
 }
 
 $query;
 // Find all repos info by current caller
 export function getMyRepos(): Result<Vec<Repo>, string> {
-    const repos = repoStorage.values();
-    let result: Repo[] = [];
-    for (const repo of repos) {
-        if (ic.caller().toString() === repo.developer.toString()) {
-            result.push(repo);
+    try {
+        // Return repos for the current caller
+        const repos = repoStorage.values();
+        const result: Repo[] = [];
+        for (const repo of repos) {
+            if (ic.caller().toString() === repo.developer.toString()) {
+                result.push(repo);
+            }
         }
+        return Result.Ok(result);
+    } catch (error) {
+        return Result.Err(`Error retrieving repos: ${error}`);
     }
-    return Result.Ok(result);
 }
 
 $query;
 // Find all repos by programming language name
 export function getReposByLanguage(languageName: string): Result<Vec<Repo>, string> {
-    const repos = repoStorage.values();
-    let languageId: string = '';
-    const languages = languageStorage.values();
-    for (const language of languages) {
-        if (language.name == languageName) {
-            languageId = language.id;
-            break;
-        }
+    // Parameter Validation: Ensure that languageName is provided
+    if (!languageName) {
+        return Result.Err<Vec<Repo>, string>('Invalid languageName provided.');
     }
 
-    if (languageId == '') {
-        return Result.Err(`language with name ${languageName} not found`);
-    }
-
-    let result: Repo[] = [];
-    for (const repo of repos) {
-        if (repo.programming_language_id === languageId) {
-            result.push(repo);
+    try {
+        // Return repos by programming language name
+        const repos = repoStorage.values();
+        let languageId: string = '';
+        const languages = languageStorage.values();
+        for (const language of languages) {
+            if (language.name === languageName) {
+                languageId = language.id;
+                break;
+            }
         }
+
+        if (languageId === '') {
+            return Result.Err(`Language with name ${languageName} not found`);
+        }
+
+        const result: Repo[] = [];
+        for (const repo of repos) {
+            if (repo.programming_language_id === languageId) {
+                result.push(repo);
+            }
+        }
+        return Result.Ok(result);
+    } catch (error) {
+        return Result.Err(`Error retrieving repos: ${error}`);
     }
-    return Result.Ok(result);
 }
 
 $query;
 // Find all repos by developer's username
 export function getReposByDev(username: string): Result<Vec<Repo>, string> {
-    const repos = repoStorage.values();
-    let developerId: string = '';
-    const developers = developerStorage.values();
-    for (const dev of developers) {
-        if (dev.username == username) {
-            developerId = dev.id;
-            break;
-        }
+    // Parameter Validation: Ensure that username is provided
+    if (!username) {
+        return Result.Err<Vec<Repo>, string>('Invalid username provided.');
     }
 
-    if (developerId == '') {
-        return Result.Err(`developer with name ${username} not found`);
-    }
-
-    let result: Repo[] = [];
-    for (const repo of repos) {
-        if (repo.developer_id === developerId) {
-            result.push(repo);
+    try {
+        // Return repos by developer's username
+        const repos = repoStorage.values();
+        let developerId: string = '';
+        const developers = developerStorage.values();
+        for (const dev of developers) {
+            if (dev.username === username) {
+                developerId = dev.id;
+                break;
+            }
         }
+
+        if (developerId === '') {
+            return Result.Err(`Developer with name ${username} not found`);
+        }
+
+        const result: Repo[] = [];
+        for (const repo of repos) {
+            if (repo.developer_id === developerId) {
+                result.push(repo);
+            }
+        }
+        return Result.Ok(result);
+    } catch (error) {
+        return Result.Err(`Error retrieving repos: ${error}`);
     }
-    return Result.Ok(result);
 }
 
 $update;
 // Create new developer info
 export function createDeveloper(payload: DeveloperPayload): Result<Developer, string> {
-    const developer: Developer = {
-        id: uuidv4(), // Generate unique ID for new developer
-        principal: ic.caller(),
-        createdAt: ic.time(),
-        updatedAt: Opt.None,
-        ...payload,
-    };
-
-    // revert if developer already exist
-    const developers = developerStorage.values();
-    for (const developer of developers) {
-        if (developer.username == developer.username) {
-            return Result.Err<Developer, string>(`developer already exist`);
+    try {
+        // Payload Validation: Check that payload properties (username, email) are valid
+        if (!payload.username || !payload.email) {
+            return Result.Err<Developer, string>('Invalid payload provided.');
         }
+
+        // Developer Existence Check: Check if a developer with the same username already exists
+        const developers = developerStorage.values();
+        for (const dev of developers) {
+            if (dev.username === payload.username) {
+                return Result.Err<Developer, string>(`Developer with username ${payload.username} already exists`);
+            }
+        }
+
+        // Create new developer
+        const developer: Developer = {
+            id: uuidv4(), // Generate unique ID for new developer
+            principal: ic.caller(),
+            createdAt: ic.time(),
+            updatedAt: Opt.None,
+            username: payload.username,
+            email: payload.email,
+        };
+
+        // Store new developer
+        developerStorage.insert(developer.id, developer);
+        return Result.Ok(developer);
+    } catch (error) {
+        return Result.Err(`Error creating developer: ${error}`);
     }
-    developerStorage.insert(developer.id, developer); // store new developer
-    return Result.Ok(developer);
 }
+
 
 $update;
 // Developer update his info
 export function updateDeveloper(
-    id: string,
-    payload: DeveloperPayload
+  id: string,
+  payload: DeveloperPayload
 ): Result<Developer, string> {
-    return match(developerStorage.get(id), {
-        Some: (developer: Developer) => {
-            // Confirm only the developer can update his info
-            if (ic.caller().toString() != developer.principal.toString()) {
-                return Result.Err<Developer, string>(
-                    `You are not authorized to update the developer info.`
-                );
-            }
+  try {
+    // ID Validation: Ensure that ID is provided
+    if (!id) {
+      return Result.Err<Developer, string>('Invalid ID provided.');
+    }
 
-            const updatedDeveloper: Developer = {
-                ...developer,
-                ...payload,
-                updatedAt: Opt.Some(ic.time()), // Set the update timestamp to the current time
-            };
-            developerStorage.insert(developer.id, updatedDeveloper); // Update the developer in the developerStorage
-            return Result.Ok<Developer, string>(updatedDeveloper);
-        },
-        None: () =>
-            Result.Err<Developer, string>(
-                `Couldn't update a developer with id=${id}. Developer not found.`
-            ),
+    // Payload Validation: Check that payload properties (username, email) are valid
+    if (!payload.username || !payload.email) {
+      return Result.Err<Developer, string>('Invalid payload provided.');
+    }
+
+    return match(developerStorage.get(id), {
+      Some: (existingDeveloper) => {
+        // Authorization Check: Confirm only the developer can update his info
+        if (ic.caller().toString() !== existingDeveloper.principal.toString()) {
+          return Result.Err<Developer, string>(
+            `You are not authorized to update the developer info.`
+          );
+        }
+
+        // Update existing developer
+        const updatedDeveloper: Developer = {
+          ...existingDeveloper,
+          ...payload,
+          updatedAt: Opt.Some(ic.time()), // Set the update timestamp to the current time
+        };
+        developerStorage.insert(existingDeveloper.id, updatedDeveloper);
+        return Result.Ok<Developer, string>(updatedDeveloper);
+      },
+      None: () => Result.Err<Developer, string>(`Developer with id=${id} not found.`),
     });
+  } catch (error) {
+    return Result.Err(`Error updating developer: ${error}`);
+  }
 }
 
 $update;
 // Create new programming language
-export function createLanguage(payload: ProgrammingLanguagePayload): Result<ProgrammingLanguage, string> {
-    const language: ProgrammingLanguage = {
-        id: uuidv4(), // Generate unique ID for new language
-        createdAt: ic.time(),
-        updatedAt: Opt.None,
-        ...payload,
-    };
-
-    // revert if language already exist
-    const languages = languageStorage.values();
-    for (const lang of languages) {
-        if (language.name == lang.name) {
-            return Result.Err<ProgrammingLanguage, string>(`ProgrammingLanguage already exist`);
+export function createLanguage(
+    payload: ProgrammingLanguagePayload
+): Result<ProgrammingLanguage, string> {
+    try {
+        // Payload Validation: Check that payload properties (name) are valid
+        if (!payload.name) {
+            return Result.Err<ProgrammingLanguage, string>('Invalid payload provided.');
         }
+
+        // Language Existence Check: Check if a programming language with the same name already exists
+        const languages = languageStorage.values();
+        for (const lang of languages) {
+            if (lang.name === payload.name) {
+                return Result.Err<ProgrammingLanguage, string>(`ProgrammingLanguage already exists`);
+            }
+        }
+
+        // Create new programming language
+        const language: ProgrammingLanguage = {
+            id: uuidv4(), // Generate unique ID for new language
+            createdAt: ic.time(),
+            updatedAt: Opt.None,
+            name: payload.name,
+        };
+
+        // Store new language
+        languageStorage.insert(language.id, language);
+        return Result.Ok(language);
+    } catch (error) {
+        return Result.Err(`Error creating programming language: ${error}`);
     }
-    languageStorage.insert(language.id, language); // store new language
-    return Result.Ok(language);
 }
+
 
 $update;
 // Developer create new repository
-export function createRepo(payload: RepoPayload): Result<Repo, string> {
-
-    const repo: Repo = {
-        id: uuidv4(),
-        developer: ic.caller(),
-        createdAt: ic.time(),
-        updatedAt: Opt.None,
-        ...payload,
-    }
-
-    // revert if repo's name already exist
-    const repos = repoStorage.values();
-    for (const repo of repos) {
-        if (repo.repo_name == payload.repo_name) {
-            return Result.Err<Repo, string>(`Repo already exist`);
+export function createRepo(
+    developer_id: string,
+    programming_language_id: string,
+    repo_name: string,
+    description: string
+): Result<Repo, string> {
+    try {
+        // Validate parameters
+        if (!developer_id || !programming_language_id || !repo_name || !description) {
+            return Result.Err<Repo, string>("Invalid parameters provided for creating a repo.");
         }
-    }
 
-    repoStorage.insert(repo.id, repo);
-    return Result.Ok(repo);
+        const repo: Repo = {
+            id: uuidv4(),
+            developer: ic.caller(),
+            createdAt: ic.time(),
+            updatedAt: Opt.None,
+            developer_id,
+            programming_language_id,
+            repo_name,
+            description,
+        };
+
+        // Check if repo's name already exists
+        const existingRepo = repoStorage.values().find((r) => r.repo_name === repo.repo_name);
+        if (existingRepo) {
+            return Result.Err<Repo, string>("Repo already exists with the provided name.");
+        }
+
+        repoStorage.insert(repo.id, repo);
+        return Result.Ok(repo);
+    } catch (error) {
+        return Result.Err(`Error creating a repo: ${error}`);
+    }
 }
+
+
 
 $update;
 // Developer update his repo
-export function updateRepo(id: string, payload: RepoPayload): Result<Repo, string> {
+export function updateRepo(
+  id: string,
+  developer_id: string,
+  programming_language_id: string,
+  repo_name: string,
+  description: string
+): Result<Repo, string> {
+  try {
+    // Validate parameters
+    if (!id || !developer_id || !programming_language_id || !repo_name || !description) {
+      return Result.Err<Repo, string>("Invalid parameters provided for updating a repo.");
+    }
+
     return match(repoStorage.get(id), {
-        Some: (repo: Repo) => {
-            // Confirm only developer of the repo can call this function
-            if (ic.caller().toString() !== repo.developer.toString()) {
-                return Result.Err<Repo, string>(
-                    `You are not authorized to delete the repo.`
-                );
-            }
+      Some: (repoToUpdate) => {
+        // Confirm only the developer of the repo can call this function
+        if (ic.caller().toString() !== repoToUpdate.developer.toString()) {
+          return Result.Err<Repo, string>(`You are not authorized to update the repo.`);
+        }
 
-            const updatedRepo: Repo = {
-                ...repo,
-                ...payload,
-                updatedAt: Opt.Some(ic.time()), // Set the update timestamp to the current time
-            };
+        const updatedRepo: Repo = {
+          ...repoToUpdate,
+          updatedAt: Opt.Some(ic.time()),
+          developer_id,
+          programming_language_id,
+          repo_name,
+          description,
+        };
 
-            repoStorage.insert(repo.id, updatedRepo); // Update the repo in the repoStorage
-            return Result.Ok<Repo, string>(updatedRepo);
-        },
-        None: () =>
-            Result.Err<Repo, string>(
-                `Couldn't update a repo with id=${id}. Repo not found.`
-            ),
+        repoStorage.insert(id, updatedRepo);
+        return Result.Ok<Repo, string>(updatedRepo);
+      },
+      None: () => Result.Err<Repo, string>(`Repo with id=${id} not found.`),
     });
+  } catch (error) {
+    return Result.Err(`Error updating a repo: ${error}`);
+  }
 }
 
 $update;
