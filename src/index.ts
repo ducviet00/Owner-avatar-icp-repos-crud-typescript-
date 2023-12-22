@@ -54,6 +54,11 @@ type RepoPayload = Record<{
 const developerStorage = new StableBTreeMap<string, Developer>(0, 44, 1024);
 const languageStorage = new StableBTreeMap<string, ProgrammingLanguage>(1, 44, 1024);
 const repoStorage = new StableBTreeMap<string, Repo>(2, 44, 1024);
+const developersMap = new Map<string, Developer>();
+const developers = developerStorage.values();
+for (const dev of developers) {
+    developersMap.set(dev.username, dev);
+}
 
 $query;
 // Find all developers info
@@ -85,13 +90,10 @@ export function getDeveloperById(id: string): Result<Developer, string> {
 $query;
 // Find developer by github's username
 export function getDeveloperByUsername(username: string): Result<Developer, string> {
-    const developers = developerStorage.values();
-    for (const dev of developers) {
-        if (dev.username == username) {
-            return Result.Ok<Developer, string>(dev);
-        }
-    }
-    return Result.Err<Developer, string>(`Developer with username = ${name} not found`);
+    const developer = developersMap.get(username);
+    return developer
+        ? Result.Ok<Developer, string>(developer)
+        : Result.Err<Developer, string>(`Developer with username=${username} not found`);
 }
 
 $query;
@@ -192,24 +194,31 @@ export function getReposByDev(username: string): Result<Vec<Repo>, string> {
 $update;
 // Create new developer info
 export function createDeveloper(payload: DeveloperPayload): Result<Developer, string> {
+    // Validate email format
+    if (!isValidEmail(payload.email)) {
+        return Result.Err<Developer, string>(`Invalid email format`);
+    }
+
     const developer: Developer = {
-        id: uuidv4(), // Generate unique ID for new developer
+        id: uuidv4(),
         principal: ic.caller(),
         createdAt: ic.time(),
         updatedAt: Opt.None,
         ...payload,
     };
-
-    // revert if developer already exist
+// Revert if developer already exists
     const developers = developerStorage.values();
-    for (const developer of developers) {
-        if (developer.username == developer.username) {
-            return Result.Err<Developer, string>(`developer already exist`);
+    for (const existingDeveloper of developers) {
+        if (existingDeveloper.username === payload.username) {
+            return Result.Err<Developer, string>(`Developer already exists`);
         }
     }
-    developerStorage.insert(developer.id, developer); // store new developer
+
+    developerStorage.insert(developer.id, developer); // Store new developer
     return Result.Ok(developer);
 }
+
+
 
 $update;
 // Developer update his info
@@ -225,6 +234,13 @@ export function updateDeveloper(
                     `You are not authorized to update the developer info.`
                 );
             }
+             // Update in updateDeveloper function
+            if (ic.canisterPrincipal() !== developer.principal) {
+               return Result.Err<Developer, string>(
+                  `You are not authorized to update the developer info.`
+             );
+}
+
 
             const updatedDeveloper: Developer = {
                 ...developer,
@@ -316,11 +332,12 @@ export function updateRepo(id: string, payload: RepoPayload): Result<Repo, strin
 
 $update;
 // Developer delete his repository
+// Consistent and Secure Principal Usage
 export function deleteRepo(id: string): Result<string, string> {
     return match(repoStorage.get(id), {
         Some: (repo: Repo) => {
-            // Confirm only developer of the repo can call this function
-            if (ic.caller().toString() !== repo.developer.toString()) {
+            // Confirm only the developer of the repo can call this function
+            if (ic.canisterPrincipal().toString() !== repo.developer.toString()) {
                 return Result.Err<string, string>(
                     `You are not authorized to delete the repo.`
                 );
@@ -331,7 +348,7 @@ export function deleteRepo(id: string): Result<string, string> {
         },
         None: () => {
             return Result.Err<string, string>(
-                `couldn't delete a repo with id=${id}. repo not found`
+                `Couldn't delete a repo with id=${id}. Repo not found`
             );
         },
     });
